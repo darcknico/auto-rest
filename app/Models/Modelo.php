@@ -13,8 +13,21 @@ class Modelo extends Model
 
   protected $table ='modelos';
 
-  public function usuario(){
+  protected $fillable = [
+  			'id',
+  			'id_ext',
+  			'id_marca',
+  			'nombre',
+  			'anio',	
+  ];
+
+  public function marca(){
     return $this->hasOne('App\Models\Marca','id','id_marca');
   }
+
+  public function historial(){
+    return $this->hasMany('App\Models\ModeloPrecio','id_modelo','id');
+  }
+
 
 }

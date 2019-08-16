@@ -6,7 +6,7 @@ use App\Models\Modelo;
 use App\Models\ModeloPrecio;
 use App\Models\Marca;
 use Carbon\Carbon;
-use Goutte\Client;
+use GuzzleHttp\Client;
 
 use Illuminate\Console\Command;
 
@@ -51,21 +51,13 @@ class PreciosRecuperar extends Command
             {
                 $id_marca = $marca_v->id;
                 $anio = (2018 - $i);
-
-                $res = $client->request('POST', 'http://www.santanderrioseguros.com.ar/agents/common/optionsLovs.jsp?tpLov=cdModelo',[
-                    'form_params' => [
-                        'cdMarca' => $id_marca,
-                        'anio' => $anio,
-                    ]
-                ]);
-                $client = new \GuzzleHttp\Client();
+                $client = new Client();
                 $res = $client->request('POST', 'http://www.santanderrioseguros.com.ar/agents/common/optionsLovs.jsp?tpLov=cdModelo', [
                     'form_params' => [
                         'cdMarca' => $id_marca,
                         'anio' => $anio,
                     ]
                 ]);
-
                 $string = $res->getBody()->getContents();
                 $array = explode("\n", $string);
                 $array_final = array();
@@ -79,40 +71,29 @@ class PreciosRecuperar extends Command
                         $elemento = str_replace("</option>", "",  $array[0]);
                         $elemento = str_replace('<option value=', "", $elemento);
                         $final = explode(">", $elemento);
+                        $cad_modelo= utf8_encode($final[1]);
                         sscanf($final[0], "'%d|%d'", $id, $precio);
-
                         $modelo = Modelo::where('anio',$anio)
                             ->where('id_ext',$id)
                             ->where('id_marca', $id_marca)
                             ->first();
-
                         if($modelo) {
-                            /* se usa para arreglar el bug de la s10, soluciona2
-                            $modelo = $existe->first();
-                            if($modelo->nombre == "P")
-                            {
-                                $modelo->update(['nombre' => $final[1]]);
-                                echo "se actualizo una VW s10 a ".$final[1];
-                            }*/
-                            //echo "| existe en DB | id ". $modelo->first()->id ." <br>";
-                            // almacenar los precios en el historial
-                            ModeloPrecio::Create([
-                                'id_vehiculo'=>$modelo->id,
-                                'precio'=>$precio,
-                            ]);
+                            $nprecio= new ModeloPrecio;
+                            $nprecio->id_modelo=$modelo->id;
+                            $nprecio->precio=$precio;
+                            $nprecio->save();
                         } else {
-                            
                             $modelo = new Modelo;
-                            $modelo->id_ext = $id;
-                            $modelo->id_marca = $id_marca;
-                            $modelo->nombre = $final[1];
-                            $modelo->anio = $anio;
+                            $modelo->id_ext=$id;
+                            $modelo->id_marca=$id_marca;
+                            $modelo->nombre=$cad_modelo;
+                            $modelo->anio=$anio;
                             $modelo->save();
                         }
-                        $precio = new ModeloPrecio;
-                        $precio->id_modelo = $modelo->id;
-                        $precio->precio = $precio;
-                        $precio->save();
+                            $nprecio = new ModeloPrecio;
+                            $nprecio->id_modelo = $modelo->id;
+                            $nprecio->precio = $precio;
+                            $nprecio->save();
                     }
                 }
             }

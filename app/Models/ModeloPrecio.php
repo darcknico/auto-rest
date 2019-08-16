@@ -13,6 +13,14 @@ class ModeloPrecio extends Model
 
   protected $table ='modelo_precio';
 
+  protected $fillable = [
+  			'id',
+  			'id_modelo',
+  			'precio',
+  			'created_at',
+  			'updated_at',
+  ];
+
   public function usuario(){
     return $this->hasOne('App\Models\Modelo','id','id_modelo');
   }

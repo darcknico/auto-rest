@@ -12,5 +12,9 @@ class Marca extends Model
   use Eloquence, Mappable;
 
   protected $table ='marcas';
+  protected $fillable = [
+  	'id',
+  	'nombre',
+  ];
 
 }
